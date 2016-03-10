@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <math.h>
 #include <string.h>
+#include <sstream>
 using namespace std;
 
 // The global game manager
@@ -125,7 +126,9 @@ enum {
   TopArm
 };
 
-GLfloat theta[3] = { 0.0 };
+GLfloat theta[3] = { 0.0, 
+                     0.0, 
+                     0.0 };
 
 mat4 robotMVP; //MVP matrix for our robot
 GLuint robotVAO;
@@ -202,15 +205,15 @@ void setup_robot() {
 
     mat4 m = projMatrix * viewMatrix * Translate(robot_position);
     robotMVP = RotateY(theta[Base]);
-    setup_robot_base(m);
+    setup_robot_base(m); //draw base
 
     robotMVP *= Translate(0.0, ROBOT_BASE_HEIGHT, 0.0);
     robotMVP *= RotateZ(theta[BottomArm]);
-    setup_robot_botarm(m);
+    setup_robot_botarm(m); //draw bottom arm
 
     robotMVP *= Translate(0.0, ROBOT_BOTARM_HEIGHT, 0.0);
     robotMVP *= RotateZ(theta[TopArm]);
-    setup_robot_toparm(m);
+    setup_robot_toparm(m); //draw top arm
     robotMVP *= Translate(0.0, ROBOT_TOPARM_HEIGHT, 0.0);
 }
 
@@ -267,13 +270,13 @@ void UpdateTilePosition() {
         glm::vec4 p7 = glm::vec4(66.0 + (x * 33.0), 33.0 + (y * 33.0), -16.50, 1); 
         glm::vec4 p8 = glm::vec4(66.0 + (x * 33.0), 66.0 + (y * 33.0), -16.50, 1); 
 
-        // Two points are used by two triangles each
-        glm::vec4 newpoints[36] = {  p1, p2, p3, p2, p3, p4,
-                                p5, p6, p7, p6, p7, p8,
-                                p1, p2, p5, p2, p5, p6,
-                                p3, p4, p7, p4, p7, p8,
-                                p2, p4, p6, p4, p6, p8,
-                                p1, p3, p5, p3, p5, p7};
+
+        glm::vec4 newpoints[36] = { p1, p2, p3, p2, p3, p4,
+                                    p1, p2, p5, p2, p5, p6,
+                                    p1, p3, p5, p3, p5, p7,
+                                    p2, p4, p6, p4, p6, p8, 
+                                    p3, p4, p7, p4, p7, p8,
+                                    p5, p6, p7, p6, p7, p8};
 
         // Put new data in the VBO
         glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(newpoints), sizeof(newpoints), newpoints);
@@ -298,7 +301,7 @@ void UpdateTileColor() {
     // Get color from color category;
     // grey out if colliding
     glm::vec4 new_colors[24*6];
-    if (!manager.getColliding()) {
+    if (manager.CheckBoundary() == libconsts::kInBoundary && !manager.CheckCollision()) {
         for (int i = 0; i < 24*6; i++) {
             new_colors[i] = libconsts::kColorCategory[manager.get_tile_current_color()[i / 36]];
         }
@@ -487,40 +490,40 @@ void InitBoard() {
             board_points[36 * (10 * i + j) + 4] = p3;
             board_points[36 * (10 * i + j) + 5] = p4;
 
-            board_points[36 * (10 * i + j) + 6 ] = p5;
-            board_points[36 * (10 * i + j) + 7 ] = p6;
-            board_points[36 * (10 * i + j) + 8 ] = p7;
-            board_points[36 * (10 * i + j) + 9 ] = p6;
-            board_points[36 * (10 * i + j) + 10] = p7;
-            board_points[36 * (10 * i + j) + 11] = p8;
+            board_points[36 * (10 * i + j) + 6 ] = p1;
+            board_points[36 * (10 * i + j) + 7 ] = p2;
+            board_points[36 * (10 * i + j) + 8 ] = p5;
+            board_points[36 * (10 * i + j) + 9 ] = p2;
+            board_points[36 * (10 * i + j) + 10] = p5;
+            board_points[36 * (10 * i + j) + 11] = p6;
 
             board_points[36 * (10 * i + j) + 12] = p1;
-            board_points[36 * (10 * i + j) + 13] = p2;
+            board_points[36 * (10 * i + j) + 13] = p3;
             board_points[36 * (10 * i + j) + 14] = p5;
-            board_points[36 * (10 * i + j) + 15] = p2;
+            board_points[36 * (10 * i + j) + 15] = p3;
             board_points[36 * (10 * i + j) + 16] = p5;
-            board_points[36 * (10 * i + j) + 17] = p6;
+            board_points[36 * (10 * i + j) + 17] = p7;
 
-            board_points[36 * (10 * i + j) + 18] = p3;
+            board_points[36 * (10 * i + j) + 18] = p2;
             board_points[36 * (10 * i + j) + 19] = p4;
-            board_points[36 * (10 * i + j) + 20] = p7;
+            board_points[36 * (10 * i + j) + 20] = p6;
             board_points[36 * (10 * i + j) + 21] = p4;
-            board_points[36 * (10 * i + j) + 22] = p7;
+            board_points[36 * (10 * i + j) + 22] = p6;
             board_points[36 * (10 * i + j) + 23] = p8;
 
-            board_points[36 * (10 * i + j) + 24] = p2;
+            board_points[36 * (10 * i + j) + 24] = p3;
             board_points[36 * (10 * i + j) + 25] = p4;
-            board_points[36 * (10 * i + j) + 26] = p6;
+            board_points[36 * (10 * i + j) + 26] = p7;
             board_points[36 * (10 * i + j) + 27] = p4;
-            board_points[36 * (10 * i + j) + 28] = p6;
+            board_points[36 * (10 * i + j) + 28] = p7;
             board_points[36 * (10 * i + j) + 29] = p8;
 
-            board_points[36 * (10 * i + j) + 30] = p1;
-            board_points[36 * (10 * i + j) + 31] = p3;
-            board_points[36 * (10 * i + j) + 32] = p5;
-            board_points[36 * (10 * i + j) + 33] = p3;
-            board_points[36 * (10 * i + j) + 34] = p5;
-            board_points[36 * (10 * i + j) + 35] = p7;  
+            board_points[36 * (10 * i + j) + 30] = p5;
+            board_points[36 * (10 * i + j) + 31] = p6;
+            board_points[36 * (10 * i + j) + 32] = p7;
+            board_points[36 * (10 * i + j) + 33] = p6;
+            board_points[36 * (10 * i + j) + 34] = p7;
+            board_points[36 * (10 * i + j) + 35] = p8; 
         }
     }
 
@@ -616,14 +619,15 @@ void Init() {
 
     gridMVP = glGetUniformLocation(program, "MVP");
     viewMatrix = LookAt( 
-            vec3(0, 70, 300),
-            vec3(0, 10, 0),
-            vec3(0, 1, 0));
+            vec3(0, 70, 300), //position of camera [world space]
+            vec3(0, 10, 0), //target of camera [world space]
+            vec3(0, 1, 0)); //upvector, looking up
 
 
     // Game initialization
     NewTile(); // create new next tile
 
+    glClearColor(0.7, 0.7, 0.7, 1);
 
     glEnable(GL_BLEND); 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -649,41 +653,33 @@ void Init() {
 //
 
 void drawBitmapText(std::string string,float x,float y) 
-{  
-    glRasterPos2f(x, y);
-
+{
+    glWindowPos2i(x, y);
     for (char& c : string) 
     {
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, c);
     }
 }
-void drawText(int x, int y, char *string)
-{
-    int i, len; 
-   
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-    glLoadIdentity();
-    glTranslatef(0.0f, 10.0f, 0.0f);
-    glRasterPos2i(x, y);
-    
-    glDisable(GL_TEXTURE);
-    glDisable(GL_TEXTURE_2D);
-    for (i = 0, len = strlen(string); i < len; i++)
-    {    
-        glutBitmapCharacter(GLUT_BITMAP_8_BY_13, (int)string[i]);
-    }
-    glEnable(GL_TEXTURE);
-    glEnable(GL_TEXTURE_2D);
-}
 void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //draw the text first so it doesnt rotate
+    stringstream ss;
+    ss << std::fixed;
+    ss.precision(1);
+
+    ss << manager.getTimeTilDrop();
+    if (manager.get_game_state() != GameState::GameStateEnd) {
+        drawBitmapText("Time Remaining Until Tile Drops: " + ss.str(), 215 , 690);
+    } else {
+        drawBitmapText("GAMEOVER - PRESS R TO RESTART", 215 , 690);
+    }
     // 42
-    projMatrix = Perspective(48, 1*size_x/size_y, 1, 500);
+    projMatrix = Perspective(48, size_x/size_y, 1, 500); //fov, aspect ratio, near, far clipping planes
 
     setup_robot();
 
-    mat4 modelMatrix = mat4();
+    mat4 modelMatrix = mat4(); //generate identity matrix
     modelMatrix *= Translate(0, 10, 0);
     modelMatrix *= Scale(0.33, 0.33, 0.33); 
     modelMatrix *= Translate(-200, -360, 0); 
@@ -704,15 +700,7 @@ void Display() {
     glBindVertexArray(vao_IDs[0]);      // Bind the VAO representing the grid lines (to be drawn on top of everything else)
     glDrawArrays(GL_LINES, 0, 590);      // Draw the grid lines (21+11 = 32 lines)
 
-    
-
-
-    int a = rand() % 10000;
-    int b = (rand() % 10000) ;
-    //cout << a << "," << b << "\n";
-    drawText(a,b,"rewrew");
-
- //   drawBitmapText("Rewrew", a , b);
+ 
     glutSwapBuffers();
 }
 
@@ -854,7 +842,7 @@ void Keyboard(unsigned char key, int, int) {
             break;
         case 'a':
             theta[BottomArm] += 3;
-            std::cout << robotTip().x << "," << robotTip().y <<","<<theta[BottomArm]<<"\n";
+           // std::cout << robotTip().x << "," << robotTip().y <<","<<theta[BottomArm]<<"\n";
             manager.MoveTile(robotTip());
             UpdateTileDisplay();
 
@@ -862,26 +850,25 @@ void Keyboard(unsigned char key, int, int) {
             break;
         case 'd':
             theta[BottomArm] -= 3;
-            std::cout << robotTip().x << "," << robotTip().y <<","<<theta[BottomArm]<<"\n";
+           // std::cout << robotTip().x << "," << robotTip().y <<","<<theta[BottomArm]<<"\n";
             manager.MoveTile(robotTip());
             UpdateTileDisplay();
             break;
         case 'w':
             theta[TopArm] += 3;
-            std::cout << robotTip().x << "," << robotTip().y <<","<<theta[TopArm]<<"\n";
+          //  std::cout << robotTip().x << "," << robotTip().y <<","<<theta[TopArm]<<"\n";
             manager.MoveTile(robotTip());
             UpdateTileDisplay();
 
             break;
         case 's':
             theta[TopArm] -= 3;
-            std::cout << robotTip().x << "," << robotTip().y <<","<<theta[TopArm]<<"\n";
+         //   std::cout << robotTip().x << "," << robotTip().y <<","<<theta[TopArm]<<"\n";
             manager.MoveTile(robotTip());
             UpdateTileDisplay();
             break;
         case ' ':
-            manager.setTileFalling(true);
-            manager.setTimeTilDrop(libconsts::kTimeTilDrop);
+            manager.release();
 
             break;
 
@@ -939,7 +926,6 @@ int main(int argc, char **argv) {
 #ifndef __APPLE__
     glewInit();
 #endif
-    glewInit();
     Init();
 
     // Setup Callback functions

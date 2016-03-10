@@ -30,13 +30,6 @@ bool GameManager::getTileFalling()  {
     return tileFalling;
 }
 
-void GameManager::setColliding(bool b) {
-    colliding = b;
-}
-
-bool GameManager::getColliding()  {
-    return colliding;
-}
 
 void GameManager::setTimeTilDrop(float f) {
     if (f < 0.0) {
@@ -79,7 +72,6 @@ void GameManager::Init(int width, int height) {
     game_states_.push(GameState::GameStateNormal);
     tick_interval_ = libconsts::kTickInsaneMode;
     setTimeTilDrop(libconsts::kTimeTilDrop);
-    setColliding(false);
     setTileFalling(false);
 }
 
@@ -96,6 +88,13 @@ void GameManager::Init(int width, int height) {
 //       void
 //
 
+void GameManager::release()  {
+    if (CheckBoundary() == libconsts::kInBoundary && !CheckCollision()) {
+            setTileFalling(true);
+            setTimeTilDrop(libconsts::kTimeTilDrop);
+    }
+}
+
 void GameManager::AddNewTile(glm::vec2 location) {
     tile_current_position_.x = location.x;
     tile_current_position_.y = location.y; // Put the tile at the top of the board
@@ -104,11 +103,10 @@ void GameManager::AddNewTile(glm::vec2 location) {
     tile_current_shape_ = rand() % libconsts::kCountShape;
 
     for (int i = 0; i < libconsts::kCountCells; i++) {
-        tile_current_color_[i] = rand() % (libconsts::kCountColor - 2) + 2;    // Except black and white
+        tile_current_color_[i] = rand() % (libconsts::kCountColor - 3) + 3;    // Except black and white and grey
     }
 
-    int boundary_state = CheckBoundary();
-    while (boundary_state != libconsts::kInBoundary) {      // Adjust tile according to boundary state
+    /*while (boundary_state != libconsts::kInBoundary) {      // Adjust tile according to boundary state
         switch (boundary_state) {
             case libconsts::kOutOfBoundaryUp:
                 tile_current_position_ += libconsts::kMoveDown;
@@ -121,10 +119,11 @@ void GameManager::AddNewTile(glm::vec2 location) {
                 break;
         }
         boundary_state = CheckBoundary();
-    }
+    }*/
+  
 
-    if (CheckCollision())
-        game_states_.push(GameState::GameStateEnd);
+    /*if (CheckCollision())
+        game_states_.push(GameState::GameStateEnd);*/
 }
 
 //
@@ -154,14 +153,19 @@ void GameManager::Tick() {
         } else {
             setTimeTilDrop(getTimeTilDrop() - 0.1);
             if (getTimeTilDrop() <= 0.0) {
+                if (CheckCollision() || CheckBoundary() != libconsts::kInBoundary) {
+                    ChangeGameMode(GameState::GameStateEnd);
+                    return;
+                }
                 setTileFalling(true);
                 setTimeTilDrop(libconsts::kTimeTilDrop);
+
             }
             std::stringstream ss;
             ss << std::fixed;
             ss.precision(1);
             ss << getTimeTilDrop();
-            std::cout << "Time Remaining Until Tile Drops:  " << ss.str() << "\r" << std::flush;
+            //std::cout << "Time Remaining Until Tile Drops:  " << ss.str() << "\r" << std::flush;
 
         }
     }
@@ -334,18 +338,14 @@ void GameManager::ChangeGameMode(GameState state){
 int GameManager::MoveTile(glm::vec2 direction) {
     if (get_game_state() != GameState::GameStatePause && !getTileFalling()) {
         tile_current_position_ = direction;
-        setColliding(false);
         if (CheckCollision()) {         // Check collision
             //tile_current_position_ -= direction;
-            setColliding(true);
 
             return libconsts::kCollision;
         }
         int boundary_state = CheckBoundary();       // Check boundary
         if (boundary_state != libconsts::kInBoundary) {
            // tile_current_position_ -= direction;
-            setColliding(true);
-
             return boundary_state;
         }
     }
@@ -406,7 +406,11 @@ void GameManager::FillTileToMap(){
         int x = tile_current_position_.x + libconsts::kShapeCategory[tile_current_shape_][tile_current_orient_][i].x;
         int y = tile_current_position_.y + libconsts::kShapeCategory[tile_current_shape_][tile_current_orient_][i].y;
         if (x >= 0 && x < map_size_.x && y >= 0 && y < map_size_.y) {
-           map_[x][y] = tile_current_color_[i];
+            if(get_game_state() != GameState::GameStateEnd) {
+                map_[x][y] = tile_current_color_[i];
+            } else {
+                map_[x][y] = 2;
+            }
         }
     }
 }
@@ -613,7 +617,6 @@ bool GameManager::CheckCollision() {
 
 void GameManager::Restart() {
     Init((int)map_size_.x, (int)map_size_.y);
-    setColliding(false);
     setTileFalling(false);
     //AddNewTile();
 }

@@ -31,12 +31,12 @@ const int kWindowPositionY = 178;
 const float kTimeTilDrop = 5.0;
 
 //robot angles
-const float kBottomArmAngle = 5.0;
-const float kTopArmAngle = 300.0;
+const float kBottomArmAngle = 10.0;
+const float kTopArmAngle = 275.0;
 
 // Count
 const int kCountShape  = 6;
-const int kCountColor  = 7;
+const int kCountColor  = 8;
 const int kCountOrient = 4;
 const int kCountCells  = 4;
 
@@ -72,11 +72,13 @@ const glm::vec4 kColorCategory[kCountColor] = {
 
     glm::vec4(0.0, 0.0, 0.0, 0.0),  // Black
     glm::vec4(1.0, 1.0, 1.0, 1.0),  // White
+    glm::vec4(0.5, 0.5, 0.5, 1.0), //grey 
     glm::vec4(1.0, 0.0, 0.0, 1.0),  // Red
     glm::vec4(0.0, 1.0, 0.0, 1.0),  // Green
     glm::vec4(1.0, 0.5, 0.0, 1.0),  // Orange
     glm::vec4(1.0, 1.0, 0.0, 1.0),  // Yellow
     glm::vec4(0.5, 0.0, 0.5, 1.0)   // Purple
+
 
 };
 

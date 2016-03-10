@@ -47,14 +47,12 @@ private:
     std::vector<std::vector<int>> map_;     // Map color data
 
     bool tileFalling;
-    bool colliding;
 
     float timeTilDrop;
 
 private:
     int DropOneBlock();             // Drop one block
-    int CheckBoundary();            // Check boundary
-    bool CheckCollision();          // Check collision
+
     void CheckElimination();        // Check elimination
     void EliminateRow(int row);     // Eliminate one row
     void FillTileToMap();           // Fill current tile to map
@@ -62,13 +60,16 @@ private:
 
 public:
     GameManager() {};
-
+    int CheckBoundary();            // Check boundary
+    bool CheckCollision();          // Check collision
     void Init(int width, int height);
 
     void AddNewTile(glm::vec2 location);      // Generate new tile
     void Tick();            // Time tick function
     int RotateTile(int direction);
     int MoveTile(glm::vec2 direction);
+
+    void release();
 
     void Easy();            // Game mode
     void Normal();
@@ -81,9 +82,6 @@ public:
 
     void setTileFalling(bool b);
     bool getTileFalling();
-
-    void setColliding(bool b);
-    bool getColliding();
 
     void setTimeTilDrop(float f);
     float getTimeTilDrop();
